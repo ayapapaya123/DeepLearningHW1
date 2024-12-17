@@ -1,10 +1,6 @@
-from pprint import pprint
-
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-
-TITLE = 'Gradient Test'
 
 
 def normalize_vector(v):
@@ -23,7 +19,7 @@ def normalize_vector(v):
     return v / norm
 
 
-def gradient_test(loss_func, grad_func, shape, eps=1, num_iters=10):
+def gradient_test(loss_func, grad_func, shape, eps=1, num_iters=10, title='Gradient Test'):
     x = np.random.rand(*shape)
     d = normalize_vector(np.random.rand(*shape))
 
@@ -41,16 +37,15 @@ def gradient_test(loss_func, grad_func, shape, eps=1, num_iters=10):
         eps *= 0.5
 
     results = {'|f(x+ed)-f(x)|': zero_order, '|f(x+ed)-f(x)-ed.T@grad(x)|': first_order}
-    # pprint(results)
     plt.figure()
     for name, arr in results.items():
         plt.semilogy(arr, label=name)
-    plt.title(TITLE)
+    plt.title(title)
     plt.xlabel('iterations')
     plt.legend()
-    plt.savefig(f'output/{TITLE}.png')
+    plt.savefig(f'output/{title}.png')
     plt.show()
 
     # Exporting data to csv as well
     results = pd.DataFrame(results)
-    results.to_csv(f'output/{TITLE}.csv')
+    results.to_csv(f'output/{title}.csv')
