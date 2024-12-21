@@ -1,3 +1,4 @@
+from collections import namedtuple
 from typing import Tuple
 
 import numpy as np
@@ -10,6 +11,18 @@ from utils import load_data
 class Softmax:
     def __init__(self, in_size, out_size):
         self.W = utils.small_rand(in_size, out_size)
+
+        # Will be used to store input for backpropagation
+        self.X = None
+        self.C = None
+        self.Cache = namedtuple('Cache', ['X', 'C'])
+        self.cache = None
+
+    def get_weight_shapes(self):
+        return self.W.shape,
+
+    def set_weights(self, weights):
+        self.W, = weights
 
     @staticmethod
     def _softmax_calc(z: np.ndarray) -> np.ndarray:
@@ -27,6 +40,9 @@ class Softmax:
         return exp_z / np.sum(exp_z, axis=1, keepdims=True)
 
     def loss(self, X: np.ndarray, C: np.ndarray, b=None) -> float:
+        self.X, self.C = X, C
+        self.cache = self.Cache(X, C)
+
         return Softmax._calc_loss(X, self.W, C, b)
 
     @staticmethod
@@ -128,6 +144,23 @@ class Softmax:
         dX = Softmax.grad_X(X, self.W, C)
         self.W -= learning_rate * dW
         return dX
+
+    def backward_weights(self):
+        return self.backwards_W(),
+
+    def backwards_X(self):
+        if any(elem is None for elem in [self.X, self.C]):
+            raise Exception("Backwards was called before calc loss")
+        # return Softmax.grad_X(self.W, self.X, self.C)
+        X, C = self.cache
+        return Softmax.grad_X(X, self.W, C)
+
+    def backwards_W(self):
+        if any(elem is None for elem in [self.X, self.C]):
+            raise Exception("Backwards was called before calc loss")
+        # return Softmax.grad_W(self.W, self.X, self.C)
+        X, C = self.cache
+        return Softmax.grad_W(X, self.W, C)
 
     def train_step(self, X, C, learning_rate):
         Softmax._calc_loss(X, self.W, C)

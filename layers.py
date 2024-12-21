@@ -22,8 +22,16 @@ class LinearLayer:
         self.b = utils.small_rand(out_size, 1)
         self.activation = activation
 
+        # Will be used to store input for backpropagation
+        self.X = None
+        # self.dW = None
+        # self.db = None
+
     def set_weights(self, weights):
-        self.W = weights
+        self.W, self.b = weights
+
+    def get_weight_shapes(self):
+        return self.W.shape, self.b.shape
 
     @staticmethod
     def calc(W, b, X, activation):
@@ -50,20 +58,6 @@ class LinearLayer:
         :return: Gradient of the weights with respect to the loss.
         """
         return LinearLayer.calc(W, b, X, activation_deriv) * V
-
-    # def update_weights(self, V, learning_rate):
-    #     """
-    #
-    #     :param V: Gradient from subsequent layer
-    #     :param learning_rate: hyper param used to modify the weights
-    #     :return: Gradient of input which will be propagated back to the previous layer
-    #     """
-    #     dW = self.backward_W(V)
-    #     db = self.backward_b(V)
-    #     dX = self.backward_X(V)
-    #     self.W -= learning_rate * dW
-    #     self.b -= learning_rate * db
-    #     return dX
 
     @staticmethod
     def grad_W(W, b, X, V, activation_deriv):
@@ -104,6 +98,57 @@ class LinearLayer:
         """
         return W.T @ LinearLayer.calc_grad(W, b, X, V, activation_deriv)
 
+    def forward(self, X):
+        self.X = X
+        return LinearLayer.calc(self.W, self.b, X, self.activation.calc)
+
+    def backward_X(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        LinearLayer.grad_X(self.W, self.b, self.X, V, self.activation.deriv)
+
+    def backward_b(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        return LinearLayer.grad_b(self.W, self.b, self.X, V, self.activation.deriv)
+
+    def backward_W(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        return LinearLayer.grad_W(self.W, self.b, self.X, V, self.activation.deriv)
+
+    def backward_weights(self, V):
+        return self.backward_W(V), self.backward_b(V)
+
+    def backward(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        self.dW = self.X.T @ V
+        self.db = np.sum(V, axis=0, keepdims=True)
+        return V @ self.W.T  # Gradient for the input
+
+    def update_weights(self, V, learning_rate):
+        """
+
+        :param V: Gradient from subsequent layer
+        :param learning_rate: hyper param used to modify the weights
+        :return: Gradient of input which will be propagated back to the previous layer
+        """
+        # if None in [self.dW, self.db]:
+        #     raise Exception("backpropagation was called before forward propagation")
+
+        dW = self.backward_W(V)
+        db = self.backward_b(V)
+        self.W -= learning_rate * dW
+        self.b -= learning_rate * db
+
+        return self.backward_X(V)
+
+
     @staticmethod
     def jacobian_test():
         X, C, _, _ = utils.load_data('data/PeaksData.mat', 1)
@@ -133,10 +178,14 @@ class ResidualLayer:
         self.b = utils.small_rand(size, 1)
         self.activation = activation
 
-    def set_weights(self, W1, W2, b):
-        self.W1 = W1
-        self.W2 = W2
-        self.b = b
+        # Will be used to store input for backpropagation
+        self.X = None
+
+    def set_weights(self, weights):
+        self.W1, self.W2, self.b = weights
+
+    def get_weight_shapes(self):
+        return self.W1.shape, self.W1.shape, self.b.shape
 
     @staticmethod
     def calc(W1, W2, b, X, activation):
@@ -163,20 +212,6 @@ class ResidualLayer:
         :return: Gradient of the weights with respect to the loss.
         """
         return LinearLayer.calc(W1, b, X, activation_deriv) * (W2.T @ V)
-
-    # def update_weights(self, V, learning_rate):
-    #     """
-    #
-    #     :param V: Gradient from subsequent layer
-    #     :param learning_rate: hyper param used to modify the weights
-    #     :return: Gradient of input which will be propagated back to the previous layer
-    #     """
-    #     dW = self.backward_W(V)
-    #     db = self.backward_b(V)
-    #     dX = self.backward_X(V)
-    #     self.W -= learning_rate * dW
-    #     self.b -= learning_rate * db
-    #     return dX
 
     @staticmethod
     def grad_W1(W1, W2, b, X, V, activation_deriv):
@@ -229,6 +264,53 @@ class ResidualLayer:
         :return: Gradient of the weights with respect to the loss.
         """
         return V + W1.T @ ResidualLayer.calc_grad(W1, W2, b, X, V, activation_deriv)
+
+    def forward(self, X):
+        self.X = X
+        return ResidualLayer.calc(self.W1, self.W2, self.b, X, self.activation.calc)
+
+    def backward_X(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        return ResidualLayer.grad_X(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+
+    def backward_b(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        return ResidualLayer.grad_b(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+
+    def backward_W1(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        return ResidualLayer.grad_W1(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+
+    def backward_W2(self, V):
+        if self.X is None:
+            raise Exception("backpropagation was called before forward propagation")
+
+        # TODO: should this be activation calc or deriv?
+        return ResidualLayer.grad_W2(self.W1, self.b, self.X, V, self.activation.deriv)
+
+    def backward_weights(self, V):
+        return self.backward_W1(V), self.backward_W2(V), self.backward_b(V)
+
+    def update_weights(self, V, learning_rate):
+        """
+
+        :param V: Gradient from subsequent layer
+        :param learning_rate: hyper param used to modify the weights
+        :return: Gradient of input which will be propagated back to the previous layer
+        """
+        dW1 = self.backward_W1(V)
+        dW2 = self.backward_W2(V)
+        db = self.backward_b(V)
+        self.W1 -= learning_rate * dW1
+        self.W2 -= learning_rate * dW2
+        self.b -= learning_rate * db
+        return self.backward_X(V)
 
     @staticmethod
     def jacobian_test():

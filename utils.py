@@ -65,3 +65,23 @@ class LeastSquares:
 
     def loss(self, X, C):
         return (0.5 / C.shape[0]) * np.linalg.norm(X.T @ self.x - C) ** 2
+
+def flatten(lst):
+    if isinstance(lst, (list, tuple, set, range, reversed, np.ndarray)):
+        for sub in lst:
+            yield from flatten(sub)
+    else:
+        yield lst
+
+
+def unflatten_numpy_array(arr, network_shapes):
+    arr = arr.flatten()
+    ret = []
+    for layer_shapes in network_shapes:
+        ret.append([])
+        for weight_shape in layer_shapes:
+            num_elems = np.prod(weight_shape)
+            weight = arr[:num_elems].reshape(weight_shape)
+            ret[-1].append(weight)
+            arr = arr[num_elems:]
+    return ret
