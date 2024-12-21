@@ -1,7 +1,7 @@
 from activations import Tanh
 from networks import neural_net_grad_test, linear_network, residual_network
 from layers import LinearLayer, ResidualLayer
-from sgd import sgd_least_squares_test, sgd_softmax_tests
+from sgd import sgd_least_squares_test, sgd_softmax_tests, sgd_neural_net_tests
 from softmax import softmax_gradient_test
 
 
@@ -13,8 +13,11 @@ def main():
     # ResidualLayer.jacobian_test()
 
 
-    neural_net_grad_test(linear_network([2, 5, 5], Tanh), title='Linear Network Gradient Test')
+    # neural_net_grad_test(linear_network([2, 5, 5], Tanh), title='Linear Network Gradient Test')
+
     # neural_net_grad_test(residual_network(2, 5, 2, Tanh), title='Residual Network Gradient Test')
+    sgd_neural_net_tests()
+    sgd_neural_net_tests(m=200)
 
 
 if __name__ == '__main__':

@@ -139,7 +139,9 @@ class Softmax:
         probs = Softmax._softmax_calc(scores)  # (m, l)
         return X @ (probs - C) / m  # (n, m) * (m, l) = (n, l)
 
-    def update_weights(self, X, C, learning_rate):
+    def update_weights(self, learning_rate):
+        X, C = self.cache
+
         dW = Softmax.grad_W(X, self.W, C)
         dX = Softmax.grad_X(X, self.W, C)
         self.W -= learning_rate * dW

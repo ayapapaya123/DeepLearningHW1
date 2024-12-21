@@ -106,7 +106,7 @@ class LinearLayer:
         if self.X is None:
             raise Exception("backpropagation was called before forward propagation")
 
-        LinearLayer.grad_X(self.W, self.b, self.X, V, self.activation.deriv)
+        return LinearLayer.grad_X(self.W, self.b, self.X, V, self.activation.deriv)
 
     def backward_b(self, V):
         if self.X is None:

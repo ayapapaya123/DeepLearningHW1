@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import utils
+from activations import ReLU
+from networks import linear_network, residual_network
 from softmax import Softmax
 from utils import batch, LeastSquares
 
@@ -30,17 +32,35 @@ def sgd_least_squares_test():
 def sgd_softmax_tests():
     learning_rates = [0.01, 0.1, 0.5, 1]
     batch_sizes = [32, 64, 128]
+
+    sgd_test({"Softmax": Softmax}, learning_rates, batch_sizes, epochs=100)
+
+
+def sgd_neural_net_tests(m=None):
+    learning_rates = [0.01, 0.05]
+    batch_sizes = [32, 64]
+
+    nets = {}
+    # res_nets = {f'ResNet(L={L})': lambda n, l: residual_network(n, l, L, ReLU) for L in range(1, 11, 3)}
+    # nets.update(res_nets)
+    linear_nets = {f'Linear(L={L})': lambda n, l: linear_network([n] + [5] * L + [l], ReLU) for L in range(1, 11, 3)}
+    nets.update(linear_nets)
+    sgd_test(nets, learning_rates, batch_sizes, m=m, epochs=1000, patience=200)
+
+
+def sgd_test(test_algorithms, learning_rates, batch_sizes, m=None, epochs=100, patience=100):
     data_options = ['GMM', 'Peaks', 'SwissRoll']
 
     for data_option in data_options:
-        X_train, C_train, X_test, C_test = utils.load_data(f'data\\{data_option}Data.mat')
+        X_train, C_train, X_test, C_test = utils.load_data(f'data\\{data_option}Data.mat', m=m)
         n, l = X_train.shape[0], C_train.shape[1]
 
-        for learning_rate in learning_rates:
-            for batch_size in batch_sizes:
-                title = f"Softmax on {data_option} with lr={learning_rate}, batch={batch_size}"
-                sgd(Softmax(n, l), X_train, C_train, learning_rate, batch_size, X_test=X_test, C_test=C_test,
-                    title=title)
+        for algorithm_name, algorithm in test_algorithms.items():
+            for learning_rate in learning_rates:
+                for batch_size in batch_sizes:
+                    title = f"{algorithm_name} on {data_option} with lr={learning_rate}, batch={batch_size}"
+                    sgd(algorithm(n, l), X_train, C_train, learning_rate, batch_size, X_test=X_test, C_test=C_test,
+                        epochs=epochs, patience=patience, title=title)
 
 
 def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
