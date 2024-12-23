@@ -23,11 +23,9 @@ def gradient_test(loss_func, grad_func, shape, eps=1, num_iters=10, title='Gradi
     x = np.random.rand(*shape)
     d = normalize_vector(np.random.rand(*shape))
 
-    dt = d.flatten()
     f_x = loss_func(x)
     grad_x = grad_func(x)
-    grad_x = grad_x.flatten()
-    dt_grad = dt.T @ grad_x
+    dt_grad = d.flatten().T @ grad_x.flatten()
     zero_order = []
     first_order = []
     for i in range(num_iters):
@@ -37,6 +35,7 @@ def gradient_test(loss_func, grad_func, shape, eps=1, num_iters=10, title='Gradi
         eps *= 0.5
 
     results = {'|f(x+ed)-f(x)|': zero_order, '|f(x+ed)-f(x)-ed.T@grad(x)|': first_order}
+
     plt.figure()
     for name, arr in results.items():
         plt.semilogy(arr, label=name)

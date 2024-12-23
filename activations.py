@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Tanh:
     @staticmethod
     def calc(x):

@@ -8,16 +8,16 @@ from softmax import softmax_gradient_test
 def main():
     # softmax_gradient_test()
     # sgd_least_squares_test()
-    # sgd_softmax_tests()
+    sgd_softmax_tests()
     # LinearLayer.jacobian_test()
     # ResidualLayer.jacobian_test()
 
-
+    # Passed
     # neural_net_grad_test(linear_network([2, 5, 5], Tanh), title='Linear Network Gradient Test')
 
     # neural_net_grad_test(residual_network(2, 5, 2, Tanh), title='Residual Network Gradient Test')
     sgd_neural_net_tests()
-    sgd_neural_net_tests(m=200)
+    # sgd_neural_net_tests(m=200)
 
 
 if __name__ == '__main__':

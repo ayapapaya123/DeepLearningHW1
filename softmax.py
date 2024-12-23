@@ -165,8 +165,26 @@ class Softmax:
         return Softmax.grad_W(X, self.W, C)
 
     def train_step(self, X, C, learning_rate):
+        self.cache = self.Cache(X, C)
+
         Softmax._calc_loss(X, self.W, C)
-        return self.update_weights(X, C, learning_rate)
+        return self.update_weights(learning_rate)
+
+    @staticmethod
+    def calc_accuracy(X, C):
+        probabilities = Softmax._softmax_calc(X)
+
+        # Get predicted classes (index of max probability per sample)
+        predicted_classes = np.argmax(probabilities, axis=0)
+
+        # Convert one-hot encoded true labels to class indices
+        true_classes = np.argmax(C, axis=1)
+
+        # Compute accuracy by comparing predictions to true labels
+        accuracy = np.mean(predicted_classes == true_classes) * 100
+
+        return accuracy
+
 
 
 def softmax_gradient_test():

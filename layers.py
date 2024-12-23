@@ -180,6 +180,8 @@ class ResidualLayer:
 
         # Will be used to store input for backpropagation
         self.X = None
+        self.Cache = namedtuple('Cache', ['X'])
+        self.cache = None
 
     def set_weights(self, weights):
         self.W1, self.W2, self.b = weights
@@ -227,17 +229,17 @@ class ResidualLayer:
         return ResidualLayer.calc_grad(W1, W2, b, X, V, activation_deriv) @ X.T
 
     @staticmethod
-    def grad_W2(W1, b, X, V, activation_deriv):
+    def grad_W2(W1, b, X, V, activation):
         """
         Calculate the layer's weights gradient
-        :param W: Layer weights
+        :param W1: Layer weights
         :param b: Layer biases
         :param X: Layer input
         :param V: Gradient from subsequent layer.
-        :param activation_deriv: Derivative of the activation function
+        :param activation: Derivative of the activation function
         :return: Gradient of the weights with respect to the loss.
         """
-        return V @ LinearLayer.calc(W1, b, X, activation_deriv).T
+        return V @ LinearLayer.calc(W1, b, X, activation).T
 
     @staticmethod
     def grad_b(W1, W2, b, X, V, activation_deriv):
@@ -267,32 +269,41 @@ class ResidualLayer:
 
     def forward(self, X):
         self.X = X
+        self.cache = self.Cache(X)
         return ResidualLayer.calc(self.W1, self.W2, self.b, X, self.activation.calc)
 
     def backward_X(self, V):
         if self.X is None:
             raise Exception("backpropagation was called before forward propagation")
+        X, = self.cache
 
-        return ResidualLayer.grad_X(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+        # return ResidualLayer.grad_X(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+        return ResidualLayer.grad_X(self.W1, self.W2, self.b, X, V, self.activation.deriv)
 
     def backward_b(self, V):
         if self.X is None:
             raise Exception("backpropagation was called before forward propagation")
+        X, = self.cache
 
-        return ResidualLayer.grad_b(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+        # return ResidualLayer.grad_b(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+        return ResidualLayer.grad_b(self.W1, self.W2, self.b, X, V, self.activation.deriv)
 
     def backward_W1(self, V):
         if self.X is None:
             raise Exception("backpropagation was called before forward propagation")
 
-        return ResidualLayer.grad_W1(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+        X, = self.cache
+
+        # return ResidualLayer.grad_W1(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
+        return ResidualLayer.grad_W1(self.W1, self.W2, self.b, X, V, self.activation.deriv)
 
     def backward_W2(self, V):
         if self.X is None:
             raise Exception("backpropagation was called before forward propagation")
+        X, = self.cache
 
-        # TODO: should this be activation calc or deriv?
-        return ResidualLayer.grad_W2(self.W1, self.b, self.X, V, self.activation.deriv)
+        # return ResidualLayer.grad_W2(self.W1, self.b, self.X, V, self.activation.deriv)
+        return ResidualLayer.grad_W2(self.W1, self.b, X, V, self.activation.calc)
 
     def backward_weights(self, V):
         return self.backward_W1(V), self.backward_W2(V), self.backward_b(V)
@@ -328,8 +339,8 @@ class ResidualLayer:
 
         # Testing W2
         jacobian_test(lambda W2: ResidualLayer.calc(W1, W2, b, X, activation.calc),
-                      lambda _, V: ResidualLayer.grad_W2(W1, b, X, V, activation.deriv),
-                      W1.shape, title='Residual Layer Jacobian Test W2')
+                      lambda _, V: ResidualLayer.grad_W2(W1, b, X, V, activation.calc),
+                      W2.shape, title='Residual Layer Jacobian Test W2')
 
         # Testing b
         jacobian_test(lambda b: ResidualLayer.calc(W1, W2, b, X, activation.calc),
