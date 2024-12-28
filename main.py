@@ -8,7 +8,7 @@ from softmax import softmax_gradient_test
 def main():
     # softmax_gradient_test()
     # sgd_least_squares_test()
-    sgd_softmax_tests()
+    # sgd_softmax_tests()
     # LinearLayer.jacobian_test()
     # ResidualLayer.jacobian_test()
 

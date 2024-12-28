@@ -6,31 +6,22 @@ def load_data(fname, m=None):
     # Loading the mat file
     mat = loadmat(fname)
     # Extracting datasets
-    X_train = mat['Yt']
-    C_train = mat['Ct']
-    X_test = mat['Yv']
-    C_test = mat['Cv']
-    # Shuffling
-    # X_train, C_train = shuffle_data(X_train, C_train)
-    # X_test, C_test = shuffle_data(X_test, C_test)
+    X_train, C_train, X_test, C_test = mat['Yt'], mat['Ct'], mat['Yv'], mat['Cv']
+
     # Limiting dataset size
     if m:
-        X_train = X_train[:, :m]
-        C_train = C_train[:, :m]
-        X_test = X_test[:, :m]
-        C_test = C_test[:, :m]
+        X_train, C_train, X_test, C_test = X_train[:, :m], C_train[:, :m], X_test[:, :m], C_test[:, :m]
+
     # Getting shapes right
-    C_train = C_train.T
-    C_test = C_test.T
+    C_train, C_test = C_train.T, C_test.T
     return X_train, C_train, X_test, C_test
 
 
 def batch(X, C, batch_size=32):
-    size = X.shape[1]
-    inds = np.random.choice(range(size), batch_size, False)
-    inds.sort()
-    X_batch = X[:, inds]
-    C_batch = C[inds]
+    num_of_examples = X.shape[1]
+    indices = np.random.choice(num_of_examples, size=batch_size, replace=False)
+    X_batch = X[:, indices]
+    C_batch = C[indices, :]
     return X_batch, C_batch
 
 
@@ -66,6 +57,7 @@ class LeastSquares:
     def loss(self, X, C):
         return (0.5 / C.shape[0]) * np.linalg.norm(X.T @ self.x - C) ** 2
 
+
 def flatten(lst):
     if isinstance(lst, (list, tuple, set, range, reversed, np.ndarray)):
         for sub in lst:
@@ -85,3 +77,16 @@ def unflatten_numpy_array(arr, network_shapes):
             ret[-1].append(weight)
             arr = arr[num_elems:]
     return ret
+
+
+def validate_accuracy(actual_results, expected_results):
+    # Get predicted classes (index of max probability per sample)
+    predicted_classes = np.argmax(actual_results, axis=1)
+
+    # Convert one-hot encoded true labels to class indices
+    true_classes = np.argmax(expected_results, axis=1)
+
+    # Compute accuracy by comparing predictions to true labels
+    accuracy = np.mean(predicted_classes == true_classes) * 100
+
+    return accuracy

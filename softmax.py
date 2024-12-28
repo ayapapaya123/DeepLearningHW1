@@ -170,21 +170,22 @@ class Softmax:
         Softmax._calc_loss(X, self.W, C)
         return self.update_weights(learning_rate)
 
-    @staticmethod
-    def calc_accuracy(X, C):
-        probabilities = Softmax._softmax_calc(X)
+    def validation(self, X, C):
+        """
+                Computes the loss for softmax regression.
 
-        # Get predicted classes (index of max probability per sample)
-        predicted_classes = np.argmax(probabilities, axis=0)
+                Args:
+                    X:  ndarray of shape (n, m)
+                        Input data (m examples, n features)
+                    C:  ndarray of shape (m, l)
+                        One-hot encoded matrix of label indicators
 
-        # Convert one-hot encoded true labels to class indices
-        true_classes = np.argmax(C, axis=1)
+                Returns:
+                    validation_accuracy: float
+                """
+        probabilities = Softmax._softmax_calc(X.T @ self.W)
 
-        # Compute accuracy by comparing predictions to true labels
-        accuracy = np.mean(predicted_classes == true_classes) * 100
-
-        return accuracy
-
+        return utils.validate_accuracy(probabilities, C)
 
 
 def softmax_gradient_test():

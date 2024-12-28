@@ -19,7 +19,7 @@ def plot_results(train_losses, test_losses=None, title=TITLE, y_label='loss'):
     plt.ylabel(y_label)
     plt.legend()
     plt.title(title)
-    plt.savefig(f'output\\SGD\\{title}.png')
+    plt.savefig(f'output\\SGD\\{y_label}\\{title}.png')
     plt.show()
 
 
@@ -34,7 +34,7 @@ def sgd_softmax_tests():
     learning_rates = [0.01, 0.1, 0.5, 1]
     batch_sizes = [32, 64, 128]
 
-    sgd_test({"Softmax": Softmax}, learning_rates, batch_sizes, epochs=100, accuracy_func=Softmax.calc_accuracy)
+    sgd_test({"Softmax": Softmax}, learning_rates, batch_sizes, epochs=100)
 
 
 def sgd_neural_net_tests(m=None):
@@ -49,7 +49,7 @@ def sgd_neural_net_tests(m=None):
     sgd_test(nets, learning_rates, batch_sizes, m=m, epochs=1000, patience=200)
 
 
-def sgd_test(test_algorithms, learning_rates, batch_sizes, m=None, epochs=100, patience=100, accuracy_func=None):
+def sgd_test(test_algorithms, learning_rates, batch_sizes, m=None, epochs=100, patience=100):
     # Provided training and test data
     for data_option in ['GMM', 'Peaks', 'SwissRoll']:
         X_train, C_train, X_test, C_test = utils.load_data(f'data\\{data_option}Data.mat', m=m)
@@ -60,11 +60,11 @@ def sgd_test(test_algorithms, learning_rates, batch_sizes, m=None, epochs=100, p
                 for batch_size in batch_sizes:
                     title = f"{algorithm_name} on {data_option} with lr={learning_rate}, batch={batch_size}"
                     sgd(algorithm(n, l), X_train, C_train, learning_rate, batch_size, X_test=X_test, C_test=C_test,
-                        epochs=epochs, patience=patience, title=title, accuracy_func=accuracy_func)
+                        epochs=epochs, patience=patience, title=title)
 
 
 def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
-        patience=100, X_test=None, C_test=None, title=TITLE, accuracy_func=None):
+        patience=100, X_test=None, C_test=None, title=TITLE):
     also_test = all(val is not None for val in [X_test, C_test])
     epochs_not_improved = 0
     min_train_loss = np.inf
@@ -88,18 +88,14 @@ def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
             break
         train_losses.append(train_loss)
 
-        if accuracy_func:
-            train_accuracy.append(accuracy_func(X_train, C_train))
-
         if also_test:
+            train_accuracy.append(train_func.validation(X_train, C_train))
             test_loss = train_func.loss(X_test, C_test)
             if np.isnan(test_loss):
                 print('nan encountered')
                 break
             test_losses.append(test_loss)
-
-            if accuracy_func:
-                test_accuracy.append(accuracy_func(X_test, C_test))
+            test_accuracy.append(train_func.validation(X_test, C_test))
 
         # Early Stopping
         if train_loss < min_train_loss:
@@ -111,5 +107,5 @@ def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
             break
 
     plot_results(train_losses, test_losses, title)
-    if accuracy_func:
+    if also_test:
         plot_results(train_accuracy, test_accuracy, title, y_label="accuracy")

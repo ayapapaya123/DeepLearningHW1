@@ -72,6 +72,11 @@ class SequentialNetwork:
     def grad_test_backwards(self, weights, X, C):
         return self.grad_test_func(self.backward_weights, weights, X, C)
 
+    def validation(self, X, C):
+        for layer in self.layers:
+            X = layer.forward(X)
+        return self.out_layer.validation(X, C)
+
 
 def linear_network(sizes, activation):
     return SequentialNetwork([layers.LinearLayer(sizes[i], sizes[i + 1], activation) for i in range(len(sizes) - 2)],
