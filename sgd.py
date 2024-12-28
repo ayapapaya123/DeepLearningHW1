@@ -44,7 +44,7 @@ def sgd_neural_net_tests(m=None):
     nets = {}
     # res_nets = {f'ResNet(L={L})': lambda n, l: residual_network(n, l, L, ReLU) for L in range(1, 11, 3)}
     # nets.update(res_nets)
-    linear_nets = {f'Linear(L={L})': lambda n, l: linear_network([n] + [5] * L + [l], ReLU) for L in range(1, 11, 3)}
+    linear_nets = {f'Linear(L={L})': lambda n, l: linear_network([n] + [5] * L + [l], ReLU) for L in [1, 4, 7]}
     nets.update(linear_nets)
     sgd_test(nets, learning_rates, batch_sizes, m=m, epochs=1000, patience=200)
 
@@ -69,8 +69,8 @@ def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
     epochs_not_improved = 0
     min_train_loss = np.inf
 
-    train_losses = []
-    test_losses = []
+    losses_train = []
+    losses_test = []
     train_accuracy = []
     test_accuracy = []
 
@@ -86,15 +86,16 @@ def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
         if np.isnan(train_loss):
             print('nan encountered')
             break
-        train_losses.append(train_loss)
+        losses_train.append(train_loss)
 
         if also_test:
+            # Check the accuracy of the function
             train_accuracy.append(train_func.validation(X_train, C_train))
             test_loss = train_func.loss(X_test, C_test)
             if np.isnan(test_loss):
                 print('nan encountered')
                 break
-            test_losses.append(test_loss)
+            losses_test.append(test_loss)
             test_accuracy.append(train_func.validation(X_test, C_test))
 
         # Early Stopping
@@ -106,6 +107,6 @@ def sgd(train_func, X_train, C_train, lr=0.1, batch_size=32, epochs=100,
         if epochs_not_improved > patience:
             break
 
-    plot_results(train_losses, test_losses, title)
+    plot_results(losses_train, losses_test, title)
     if also_test:
         plot_results(train_accuracy, test_accuracy, title, y_label="accuracy")

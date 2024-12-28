@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 import numpy as np
 
 import activations
@@ -123,14 +125,6 @@ class LinearLayer:
     def backward_weights(self, V):
         return self.backward_W(V), self.backward_b(V)
 
-    def backward(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
-
-        self.dW = self.X.T @ V
-        self.db = np.sum(V, axis=0, keepdims=True)
-        return V @ self.W.T  # Gradient for the input
-
     def update_weights(self, V, learning_rate):
         """
 
@@ -141,10 +135,8 @@ class LinearLayer:
         # if None in [self.dW, self.db]:
         #     raise Exception("backpropagation was called before forward propagation")
 
-        dW = self.backward_W(V)
-        db = self.backward_b(V)
-        self.W -= learning_rate * dW
-        self.b -= learning_rate * db
+        self.W -= learning_rate * self.backward_W(V)
+        self.b -= learning_rate * self.backward_b(V)
 
         return self.backward_X(V)
 
@@ -239,7 +231,7 @@ class ResidualLayer:
         :param activation: Derivative of the activation function
         :return: Gradient of the weights with respect to the loss.
         """
-        return V @ LinearLayer.calc(W1, b, X, activation).T
+        return V @ (W1 @ X + b).T
 
     @staticmethod
     def grad_b(W1, W2, b, X, V, activation_deriv):
@@ -315,12 +307,9 @@ class ResidualLayer:
         :param learning_rate: hyper param used to modify the weights
         :return: Gradient of input which will be propagated back to the previous layer
         """
-        dW1 = self.backward_W1(V)
-        dW2 = self.backward_W2(V)
-        db = self.backward_b(V)
-        self.W1 -= learning_rate * dW1
-        self.W2 -= learning_rate * dW2
-        self.b -= learning_rate * db
+        self.W1 -= learning_rate * self.backward_W1(V)
+        self.W2 -= learning_rate * self.backward_W2(V)
+        self.b -= learning_rate * self.backward_b(V)
         return self.backward_X(V)
 
     @staticmethod

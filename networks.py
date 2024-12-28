@@ -56,15 +56,13 @@ class SequentialNetwork:
         self.update_weights(learning_rate)
 
     def grad_test_func(self, func, weights, X, C):
-        weights = utils.unflatten_numpy_array(weights, self.get_weight_shapes())
+        weights = utils.separate_weights_by_shapes(weights, self.get_weight_shapes())
         for layer, weight in zip(self.layers, weights[:-1]):
             layer.set_weights(weight)
         self.out_layer.set_weights(weights[-1])
         ret = func(X, C)
-        ret = utils.flatten(ret)
-        ret = list(ret)
-        ret = np.array(ret)
-        return ret
+
+        return np.array(list(utils.flatten(ret)))
 
     def grad_test_forward(self, weights, X, C):
         return self.grad_test_func(self.forward, weights, X, C)

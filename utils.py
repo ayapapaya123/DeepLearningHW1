@@ -66,16 +66,20 @@ def flatten(lst):
         yield lst
 
 
-def unflatten_numpy_array(arr, network_shapes):
+def separate_weights_by_shapes(arr, network_shapes):
     arr = arr.flatten()
     ret = []
     for layer_shapes in network_shapes:
-        ret.append([])
+        curr_layer = []
         for weight_shape in layer_shapes:
+            # calc how many weights this layer needs
             num_elems = np.prod(weight_shape)
             weight = arr[:num_elems].reshape(weight_shape)
-            ret[-1].append(weight)
+            curr_layer.append(weight)
+
+            # Get rid of weights we already added
             arr = arr[num_elems:]
+        ret.append(curr_layer)
     return ret
 
 
@@ -87,6 +91,4 @@ def validate_accuracy(actual_results, expected_results):
     true_classes = np.argmax(expected_results, axis=1)
 
     # Compute accuracy by comparing predictions to true labels
-    accuracy = np.mean(predicted_classes == true_classes) * 100
-
-    return accuracy
+    return np.mean(predicted_classes == true_classes) * 100
