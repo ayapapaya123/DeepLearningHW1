@@ -26,8 +26,6 @@ class LinearLayer:
 
         # Will be used to store input for backpropagation
         self.X = None
-        # self.dW = None
-        # self.db = None
 
     def set_weights(self, weights):
         self.W, self.b = weights
@@ -110,20 +108,9 @@ class LinearLayer:
 
         return LinearLayer.grad_X(self.W, self.b, self.X, V, self.activation.deriv)
 
-    def backward_b(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
-
-        return LinearLayer.grad_b(self.W, self.b, self.X, V, self.activation.deriv)
-
-    def backward_W(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
-
-        return LinearLayer.grad_W(self.W, self.b, self.X, V, self.activation.deriv)
-
     def backward_weights(self, V):
-        return self.backward_W(V), self.backward_b(V)
+        return LinearLayer.grad_W(self.W, self.b, self.X, V, self.activation.deriv),\
+               LinearLayer.grad_b(self.W, self.b, self.X, V, self.activation.deriv)
 
     def update_weights(self, V, learning_rate):
         """
@@ -132,11 +119,8 @@ class LinearLayer:
         :param learning_rate: hyper param used to modify the weights
         :return: Gradient of input which will be propagated back to the previous layer
         """
-        # if None in [self.dW, self.db]:
-        #     raise Exception("backpropagation was called before forward propagation")
-
-        self.W -= learning_rate * self.backward_W(V)
-        self.b -= learning_rate * self.backward_b(V)
+        self.W -= learning_rate * LinearLayer.grad_W(self.W, self.b, self.X, V, self.activation.deriv)
+        self.b -= learning_rate * LinearLayer.grad_b(self.W, self.b, self.X, V, self.activation.deriv)
 
         return self.backward_X(V)
 
@@ -272,33 +256,12 @@ class ResidualLayer:
         # return ResidualLayer.grad_X(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
         return ResidualLayer.grad_X(self.W1, self.W2, self.b, X, V, self.activation.deriv)
 
-    def backward_b(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
-        X, = self.cache
-
-        # return ResidualLayer.grad_b(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
-        return ResidualLayer.grad_b(self.W1, self.W2, self.b, X, V, self.activation.deriv)
-
-    def backward_W1(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
-
-        X, = self.cache
-
-        # return ResidualLayer.grad_W1(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
-        return ResidualLayer.grad_W1(self.W1, self.W2, self.b, X, V, self.activation.deriv)
-
-    def backward_W2(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
-        X, = self.cache
-
-        # return ResidualLayer.grad_W2(self.W1, self.b, self.X, V, self.activation.deriv)
-        return ResidualLayer.grad_W2(self.W1, self.b, X, V, self.activation.calc)
-
     def backward_weights(self, V):
-        return self.backward_W1(V), self.backward_W2(V), self.backward_b(V)
+        X, = self.cache
+
+        return ResidualLayer.grad_W1(self.W1, self.W2, self.b, X, V, self.activation.deriv), \
+               ResidualLayer.grad_W2(self.W1, self.b, X, V, self.activation.calc), \
+               ResidualLayer.grad_b(self.W1, self.W2, self.b, X, V, self.activation.deriv)
 
     def update_weights(self, V, learning_rate):
         """
@@ -307,9 +270,11 @@ class ResidualLayer:
         :param learning_rate: hyper param used to modify the weights
         :return: Gradient of input which will be propagated back to the previous layer
         """
-        self.W1 -= learning_rate * self.backward_W1(V)
-        self.W2 -= learning_rate * self.backward_W2(V)
-        self.b -= learning_rate * self.backward_b(V)
+        X, = self.cache
+
+        self.W1 -= learning_rate * ResidualLayer.grad_W1(self.W1, self.W2, self.b, X, V, self.activation.deriv)
+        self.W2 -= learning_rate * ResidualLayer.grad_W2(self.W1, self.b, X, V, self.activation.calc)
+        self.b -= learning_rate * ResidualLayer.grad_b(self.W1, self.W2, self.b, X, V, self.activation.deriv)
         return self.backward_X(V)
 
     @staticmethod

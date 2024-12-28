@@ -36,20 +36,18 @@ class LeastSquares:
         self.x = small_rand(n, 1)
 
     @staticmethod
-    def gen_data(m = 1000, n = 100):
+    def gen_data(m=1000, n=100):
         X = np.random.normal(0, 1, (n, m))
         x_opt = np.random.normal(0, 1, n)
         noise = np.random.normal(0, 0.1, m)
-        C = X.T @ x_opt + noise
-        C = C.reshape((-1, 1))
+        C = (X.T @ x_opt + noise).reshape((-1, 1))
         return X, C
 
     def backward(self, X, C):
         C = C.squeeze()
         self.x = self.x.squeeze()
         ret = X @ (X.T @ self.x - C) / C.shape[0]
-        ret = ret.reshape(-1, 1)
-        return ret
+        return ret.reshape(-1, 1)
 
     def train_step(self, X, C, learning_rate):
         self.x -= learning_rate * self.backward(X, C)

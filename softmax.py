@@ -148,7 +148,8 @@ class Softmax:
         return dX
 
     def backward_weights(self):
-        return self.backwards_W(),
+        X, C = self.cache
+        return Softmax.grad_W(X, self.W, C)
 
     def backwards_X(self):
         if any(elem is None for elem in [self.X, self.C]):
@@ -156,13 +157,6 @@ class Softmax:
         # return Softmax.grad_X(self.W, self.X, self.C)
         X, C = self.cache
         return Softmax.grad_X(X, self.W, C)
-
-    def backwards_W(self):
-        if any(elem is None for elem in [self.X, self.C]):
-            raise Exception("Backwards was called before calc loss")
-        # return Softmax.grad_W(self.W, self.X, self.C)
-        X, C = self.cache
-        return Softmax.grad_W(X, self.W, C)
 
     def train_step(self, X, C, learning_rate):
         self.cache = self.Cache(X, C)

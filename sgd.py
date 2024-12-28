@@ -42,9 +42,9 @@ def sgd_neural_net_tests(m=None):
     batch_sizes = [32, 64]
 
     nets = {}
-    # res_nets = {f'ResNet(L={L})': lambda n, l: residual_network(n, l, L, ReLU) for L in range(1, 11, 3)}
+    # res_nets = {f'ResNet(L={L})': lambda n, l: residual_network(n, l, L, ReLU) for L in [1, 4, 7, 10]}
     # nets.update(res_nets)
-    linear_nets = {f'Linear(L={L})': lambda n, l: linear_network([n] + [5] * L + [l], ReLU) for L in [1, 4, 7]}
+    linear_nets = {f'Linear(L={L})': lambda n, l: linear_network([n] + [5] * L + [l], ReLU) for L in [1, 4, 7, 10]}
     nets.update(linear_nets)
     sgd_test(nets, learning_rates, batch_sizes, m=m, epochs=1000, patience=200)
 
