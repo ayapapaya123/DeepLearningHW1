@@ -215,7 +215,7 @@ class ResidualLayer:
         :param activation: Derivative of the activation function
         :return: Gradient of the weights with respect to the loss.
         """
-        return V @ (W1 @ X + b).T
+        return V @ activation(W1 @ X + b).T
 
     @staticmethod
     def grad_b(W1, W2, b, X, V, activation_deriv):
