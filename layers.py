@@ -25,7 +25,10 @@ class LinearLayer:
         self.activation = activation
 
         # Will be used to store input for backpropagation
-        self.X = None
+        # self.X = None
+        self.Cache = namedtuple('Cache', ['X'])
+        self.cache = None
+
 
     def set_weights(self, weights):
         self.W, self.b = weights
@@ -57,7 +60,7 @@ class LinearLayer:
         :param activation_deriv: Derivative of the activation function
         :return: Gradient of the weights with respect to the loss.
         """
-        return LinearLayer.calc(W, b, X, activation_deriv) * V
+        return activation_deriv(W @ X + b) * V
 
     @staticmethod
     def grad_W(W, b, X, V, activation_deriv):
@@ -99,18 +102,23 @@ class LinearLayer:
         return W.T @ LinearLayer.calc_grad(W, b, X, V, activation_deriv)
 
     def forward(self, X):
-        self.X = X
+        # self.X = X
+        self.cache = self.Cache(X)
+
         return LinearLayer.calc(self.W, self.b, X, self.activation.calc)
 
     def backward_X(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
+        # if self.X is None:
+        #     raise Exception("backpropagation was called before forward propagation")
+        X, = self.cache
 
-        return LinearLayer.grad_X(self.W, self.b, self.X, V, self.activation.deriv)
+        return LinearLayer.grad_X(self.W, self.b, X, V, self.activation.deriv)
 
     def backward_weights(self, V):
-        return LinearLayer.grad_W(self.W, self.b, self.X, V, self.activation.deriv),\
-               LinearLayer.grad_b(self.W, self.b, self.X, V, self.activation.deriv)
+        X, = self.cache
+
+        return LinearLayer.grad_W(self.W, self.b, X, V, self.activation.deriv),\
+               LinearLayer.grad_b(self.W, self.b, X, V, self.activation.deriv)
 
     def update_weights(self, V, learning_rate):
         """
@@ -119,8 +127,10 @@ class LinearLayer:
         :param learning_rate: hyper param used to modify the weights
         :return: Gradient of input which will be propagated back to the previous layer
         """
-        self.W -= learning_rate * LinearLayer.grad_W(self.W, self.b, self.X, V, self.activation.deriv)
-        self.b -= learning_rate * LinearLayer.grad_b(self.W, self.b, self.X, V, self.activation.deriv)
+        X, = self.cache
+
+        self.W -= learning_rate * LinearLayer.grad_W(self.W, self.b, X, V, self.activation.deriv)
+        self.b -= learning_rate * LinearLayer.grad_b(self.W, self.b, X, V, self.activation.deriv)
 
         return self.backward_X(V)
 
@@ -244,16 +254,11 @@ class ResidualLayer:
         return V + W1.T @ ResidualLayer.calc_grad(W1, W2, b, X, V, activation_deriv)
 
     def forward(self, X):
-        self.X = X
         self.cache = self.Cache(X)
         return ResidualLayer.calc(self.W1, self.W2, self.b, X, self.activation.calc)
 
     def backward_X(self, V):
-        if self.X is None:
-            raise Exception("backpropagation was called before forward propagation")
         X, = self.cache
-
-        # return ResidualLayer.grad_X(self.W1, self.W2, self.b, self.X, V, self.activation.deriv)
         return ResidualLayer.grad_X(self.W1, self.W2, self.b, X, V, self.activation.deriv)
 
     def backward_weights(self, V):
