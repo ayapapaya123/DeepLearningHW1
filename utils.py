@@ -8,6 +8,14 @@ def load_data(fname, m=None):
     # Extracting datasets
     X_train, C_train, X_test, C_test = mat['Yt'], mat['Ct'], mat['Yv'], mat['Cv']
 
+    # Choose data randomly
+    train_random_perm = np.random.permutation(X_train.shape[1])
+    X_train = X_train[:, train_random_perm]
+    C_train = C_train[:, train_random_perm]
+    test_random_perm = np.random.permutation(X_test.shape[1])
+    X_test = X_test[:, test_random_perm]
+    C_test = C_test[:, test_random_perm]
+
     # Limiting dataset size
     if m:
         X_train, C_train, X_test, C_test = X_train[:, :m], C_train[:, :m], X_test[:, :m], C_test[:, :m]

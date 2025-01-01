@@ -19,7 +19,7 @@ def plot_results(train_losses, test_losses=None, title=TITLE, y_label='loss'):
     plt.ylabel(y_label)
     plt.legend()
     plt.title(title)
-    plt.savefig(f'output\\SGD\\{y_label}\\{title}.png')
+    plt.savefig(f'output\\SGD\\{y_label}_{title}.png')
     plt.show()
 
 
