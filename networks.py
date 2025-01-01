@@ -7,7 +7,7 @@ from grad_test import gradient_test
 from softmax import Softmax
 
 
-def neural_net_grad_test(net, m=100, title="NN Gradient Test"):
+def neural_net_grad_test(net, m=100, title="Neural Net Gradient Test"):
     X, C, _, _ = utils.load_data('data/PeaksData.mat', m)
     gradient_test(lambda weights: net.grad_test_forward(weights, X, C),
                   lambda weights: net.grad_test_backwards(weights, X, C),
